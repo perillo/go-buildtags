@@ -31,7 +31,7 @@ import (
 // environment variable.
 var gocmd = "go"
 
-// List of past, present, and future known GOOS and GOARCH values.
+// List of past, present and future known GOOS and GOARCH values.
 // Taken from cmd/go/internal/imports/build.go in the Go distribution.
 var (
 	knownOS = map[string]bool{
