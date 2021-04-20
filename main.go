@@ -2,6 +2,10 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
+// The code for the parsename function has been adapted from the goodOSArchFile
+// method from src/go/build/build.go in the Go source distribution.
+// Copyright 2011 The Go Authors. All rights reserved.
+
 package main
 
 import (
@@ -18,6 +22,7 @@ import (
 	"path/filepath"
 	"sort"
 	"strconv"
+	"strings"
 
 	"github.com/perillo/go-buildtags/internal/invoke"
 )
@@ -206,6 +211,35 @@ func readdir(dir string) ([]string, error) {
 	return list, nil
 }
 
+// parsename returns the tags specified in the Go file name.
+func parsename(name string) (tags [2]string) {
+	// Strip the file extension.
+	if dot := strings.Index(name, "."); dot != -1 {
+		name = name[:dot]
+	}
+
+	// Skip normal files.
+	i := strings.Index(name, "_")
+	if i < 0 {
+		return tags
+	}
+
+	l := strings.Split(name[i+1:], "_")
+	if n := len(l); n > 0 && l[n-1] == "test" {
+		l = l[:n-1]
+	}
+	n := len(l)
+
+	if n >= 2 && knownOS[l[n-2]] && knownArch[l[n-1]] {
+		return [2]string{l[n-1], l[n-2]}
+	}
+	if n >= 1 && (knownOS[l[n-1]] || knownArch[l[n-1]]) {
+		return [2]string{l[n-1]}
+	}
+
+	return tags
+}
+
 // parseheader returns the named Go file header, from the start of the file
 // until the start of the package statement.
 func parseheader(path string) ([]byte, error) {
@@ -228,7 +262,14 @@ func parseheader(path string) ([]byte, error) {
 
 // parse adds all the build tags in the named Go file to tags.
 func parse(tags tagset, dir, name string) error {
-	// TODO(mperillo): Parse the build tags defined in the Go file name.
+	// Parse the build tags defined in the Go file name.
+	autotags := parsename(name)
+	if tag := autotags[0]; tag != "" {
+		tags.add(tag)
+	}
+	if tag := autotags[1]; tag != "" {
+		tags.add(tag)
+	}
 
 	// Parse the build tags in the Go file header.
 	path := filepath.Join(dir, name)
