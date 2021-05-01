@@ -16,6 +16,7 @@ import (
 	"go/build/constraint"
 	"go/parser"
 	"go/token"
+	"io"
 	"log"
 	"os"
 	"os/exec"
@@ -101,6 +102,14 @@ func (set tagset) add(tag string) {
 	set[tag] = struct{}{}
 }
 
+func (set tagset) format(w io.Writer, label string) {
+	list := set.sorted()
+	w.Write([]byte(label + ":\n"))
+	for _, ent := range list {
+		w.Write([]byte("\t" + ent + "\n"))
+	}
+}
+
 func (set tagset) sorted() []string {
 	list := make([]string, 0, len(set))
 	for tag := range set {
@@ -183,11 +192,11 @@ func run(directories []string) error {
 	}
 
 	// Print the tags.
-	fmt.Println("GOOS:", goos.sorted())
-	fmt.Println("GOARCH:", goarch.sorted())
-	fmt.Println("release-tag:", release.sorted())
-	fmt.Println("special-tag:", special.sorted())
-	fmt.Println("build-tag:", build.sorted())
+	goos.format(os.Stdout, "GOOS")
+	goarch.format(os.Stdout, "GOARCH")
+	release.format(os.Stdout, "release-tag")
+	special.format(os.Stdout, "special-tag")
+	build.format(os.Stdout, "build-tag")
 
 	return nil
 }
