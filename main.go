@@ -130,8 +130,6 @@ func main() {
 	flag.Usage = func() {
 		w := flag.CommandLine.Output()
 		fmt.Fprintln(w, "Usage: go-buildtags [packages]")
-		fmt.Fprintf(w, "Options:\n")
-		flag.PrintDefaults()
 	}
 	flag.Parse()
 	args := flag.Args()
