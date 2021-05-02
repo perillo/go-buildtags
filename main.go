@@ -24,6 +24,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"text/tabwriter"
 
 	"github.com/perillo/go-buildtags/internal/invoke"
 )
@@ -96,17 +97,23 @@ var knownSpecialTag = map[string]bool{
 	// TODO(mperillo): Add msan and race to knownSpecialTag?
 }
 
-type tagset map[string]struct{}
+type tagset map[string]int
 
 func (set tagset) add(tag string) {
-	set[tag] = struct{}{}
+	set[tag] = set[tag] + 1
+}
+
+func (set tagset) addn(tag string, n int) {
+	set[tag] = n
 }
 
 func (set tagset) format(w io.Writer, label string) {
 	list := set.sorted()
+
 	w.Write([]byte(label + ":\n"))
-	for _, ent := range list {
-		w.Write([]byte("\t" + ent + "\n"))
+	for _, tag := range list {
+		n := set[tag]
+		w.Write([]byte("\t" + tag + "\t" + strconv.Itoa(n) + "\n"))
 	}
 }
 
@@ -176,27 +183,29 @@ func run(directories []string) error {
 	release := make(tagset)
 	special := make(tagset)
 	build := make(tagset)
-	for tag := range tags {
+	for tag, n := range tags {
 		switch {
 		case knownOS[tag]:
-			goos.add(tag)
+			goos.addn(tag, n)
 		case knownArch[tag]:
-			goarch.add(tag)
+			goarch.addn(tag, n)
 		case knownReleaseTag[tag]:
-			release.add(tag)
+			release.addn(tag, n)
 		case knownSpecialTag[tag]:
-			special.add(tag)
+			special.addn(tag, n)
 		default:
-			build.add(tag)
+			build.addn(tag, n)
 		}
 	}
 
 	// Print the tags.
-	goos.format(os.Stdout, "GOOS")
-	goarch.format(os.Stdout, "GOARCH")
-	release.format(os.Stdout, "release-tag")
-	special.format(os.Stdout, "special-tag")
-	build.format(os.Stdout, "build-tag")
+	w := tabwriter.NewWriter(os.Stdout, 0, 0, 4, ' ', 0)
+	goos.format(w, "GOOS")
+	goarch.format(w, "GOARCH")
+	release.format(w, "release-tag")
+	special.format(w, "special-tag")
+	build.format(w, "build-tag")
+	w.Flush()
 
 	return nil
 }
