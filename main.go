@@ -325,6 +325,9 @@ func parsetags(tags tagset, header []byte) error {
 // addtags adds all the build tags in expr to tags.
 func addtags(tags tagset, expr constraint.Expr) {
 	switch tag := expr.(type) {
+	case *constraint.AndExpr:
+		addtags(tags, tag.X)
+		addtags(tags, tag.Y)
 	case *constraint.NotExpr:
 		addtags(tags, tag.X)
 	case *constraint.OrExpr:
