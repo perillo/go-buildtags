@@ -29,6 +29,8 @@ import (
 	"github.com/perillo/go-buildtags/internal/invoke"
 )
 
+const usage = "Usage: go-buildtags [packages]"
+
 // gocmd is the go command to use.  It can be overridden using the GOCMD
 // environment variable.
 var gocmd = "go"
@@ -144,8 +146,7 @@ func main() {
 
 	// Parse command line.
 	flag.Usage = func() {
-		w := flag.CommandLine.Output()
-		fmt.Fprintln(w, "Usage: go-buildtags [packages]")
+		fmt.Fprintln(os.Stderr, usage)
 	}
 	flag.Parse()
 	args := flag.Args()
