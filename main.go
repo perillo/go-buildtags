@@ -128,7 +128,7 @@ func (set tagset) sorted() []string {
 }
 
 func init() {
-	if value, ok := os.LookupEnv("GOCMD"); ok {
+	if value := os.Getenv("GOCMD"); value != "" {
 		gocmd = value
 	}
 
