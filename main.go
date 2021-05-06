@@ -6,6 +6,7 @@
 // method from src/go/build/build.go in the Go source distribution.
 // Copyright 2011 The Go Authors. All rights reserved.
 
+// go-buildtags parses, categories and shows all build tags in a package.
 package main
 
 import (
